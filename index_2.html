@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dragon Ball Characters</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 25px;
+        }
+
+        .search-bar button:hover {
+            background-color: #0056b3;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .table-container {
+            width: 40%;
+            margin-right: 20px;
+        }
+
+        #character-info {
+            width: 60%;
+            text-align: center;
+            border: 1px solid black;
+
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border: 1px solid black;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            border: 1px solid black;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .td1 {
+            font-weight: bold;
+        }
+
+        .btn {
+            background-color: #ffffff00;
+            border: 0px solid #ddd;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="search-bar">
+        <input type="text" id="name" placeholder="Nombre">
+        <input type="text" id="gender" placeholder="Género">
+        <input type="text" id="race" placeholder="Raza">
+        <button onclick="searchCharacters()">Buscar</button>
+    </div>
+
+ 
+
+    <table class="table" id="tablaEntera" cellspacing=0px>
+        <thead>
+            <tr class="rows">
+                <th>ID</th>
+                <th class="nombre">NAME</th>
+                <th>RACE</th>
+                <th>GENDER</th>
+            </tr>
+        </thead>
+        <tbody id="cuerpoTabla"> </tbody>
+    </table>
+    <div id="detallesPersonaje"></div>
+    <ul class="character-list" id="character-list"></ul>
+
+    <div class="character-details" id="character-details" style="display: none; border: solid 1px black; background-color: antiquewhite; "></div>
+    <script src="script.js"></script>
+
+    <script>
+
+        // URL base de la API
+        const apiUrl = 'https://dragonball-api.com/api/characters';
+         // Inicializar la lista de personajes al cargar la página
+         window.onload = fetchCharacters;  
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const tablaEntera = document.getElementById("tablaEntera").getElementsByTagName('tbody')[0];
+            const detallesPersonaje = document.getElementById("detallesPersonaje"); 
+            fetch("https://dragonball-api.com/api/characters").then(response => response.json()).then(data => {
+                const info = data.items; 
+                let index = 1; 
+                info.forEach(character => { 
+                    const row = 
+                    `<tr>                                
+                        <td>${index++}</td>                                
+                        <td class="nombrePersonaje">${character.name}</td>                                
+                        <td>${character.gender}</td>                                
+                        <td>${character.race}</td>                            
+                    </tr>`; 
+                        tablaEntera.insertAdjacentHTML('beforeend', row); 
+                    }); 
+                    document.querySelectorAll('.nombrePersonaje').forEach(nombrePersonaje => {
+                        nombrePersonaje.addEventListener('click', () => {
+                        const nombre = nombrePersonaje.textContent;
+                        const personajeClickado = info.find(character => character.name === nombre); 
+                        const details = `<h3>${personajeClickado.name}</h3>                                        
+                        <img src="${personajeClickado.image}">                                        
+                        <div class="pequenyo">                                        
+                            <p>Género: ${personajeClickado.gender}</p>                                        
+                            <p>Raza: ${personajeClickado.race}</p>                                        
+                            <p>Descripcion: ${personajeClickado.description}</p>
+                            </div>`;
+                        detallesPersonaje.innerHTML = details;
+                    });
+                });
+            }).catch(error => { console.error('Could not fetch data', error); });
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll('.nombreBuscado').forEach(nombreBuscado => {
+                buscar.addEventListener('click', () => {
+                    const nombreBuscador = nombreBuscado.textContent; 
+                    const personajeBuscado = info.find(character => character.name === nombreBuscador);
+                    const nombreEncontrado = 
+                    ` <div> ${personajeBuscado.name} </div>`; 
+                    nombreEncontrado.innerHTML = details;
+                });
+            });
+        });
+
+        // Función para obtener los primeros 10 personajes
+        async function fetchCharacters() {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            displayCharacters(data);
+        }
+
+        // Función para mostrar los personajes en la pantalla
+        function displayCharacters(characters) {
+            const characterList = document.getElementById('character-list');
+            characterList.innerHTML = '';
+
+            characters.slice(0, 10).forEach(character => {
+                const characterItem = document.createElement('li');
+                characterItem.classList.add('character-item');
+                characterItem.textContent = character.name;
+                characterItem.onclick = () => fetchCharacterDetails(character.id);
+                characterList.appendChild(characterItem);
+            });
+        }
+
+        // Función para obtener los detalles de un personaje
+        async function fetchCharacterDetails(id) {
+            const response = await fetch(`${apiUrl}/${id}`);
+            const character = await response.json();
+            displayCharacterDetails(character);
+        }
+
+        // Función para mostrar los detalles de un personaje
+        function displayCharacterDetails(character) {
+            const characterDetails = document.getElementById('character-details');
+            characterDetails.innerHTML = `
+                <img src="${character.image}" alt="${character.name}" style="width: 150px; height: auto;">
+                <div>
+                    <h2>${character.name}</h2>
+                    <p><strong>Género:</strong> ${character.gender}</p>
+                    <p><strong>Raza:</strong> ${character.race}</p>
+                    <p><strong>Descripción:</strong> ${character.description}</p>
+                </div>
+            `;
+            characterDetails.style.display = 'flex';
+        }
+
+
+        // Función para buscar personajes por nombre, género o raza
+        async function searchCharacters() {
+            const name = document.getElementById('name').value;
+            const gender = document.getElementById('gender').value;
+            const race = document.getElementById('race').value;
+
+            let searchUrl = `${apiUrl}?`;
+
+            if (name) searchUrl += `name=${name}&`;
+            if (gender) searchUrl += `gender=${gender}&`;
+            if (race) searchUrl += `race=${race}`;
+
+            const response = await fetch(searchUrl);
+            const characters = await response.json();
+            displayCharacters(characters);
+        }
+
+       
+
+    </script>
+</body>
+
+</html>
